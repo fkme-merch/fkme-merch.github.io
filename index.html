@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FKME Wholesale Order Form</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for Inter font and general body styling */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7fafc; /* Light gray background */
+    }
+    /* Style for the 'Send Order Email' button */
+    .send-email-button {
+      background-color: #6d28d9; /* Deep purple */
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      transition: background-color 0.2s ease-in-out;
+    }
+    .send-email-button:hover {
+      background-color: #7c3aed; /* Lighter purple on hover */
+    }
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+    /* Ensure table elements are responsive */
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }
+      tr { border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+      td {
+        border: none;
+        border-bottom: 1px solid #e2e8f0;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+        min-height: 44px; /* Ensure cells have a minimum height */
+      }
+      td:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+      }
+      /* Label the data */
+      tbody td:nth-of-type(1):before { content: "Product"; }
+      tbody td:nth-of-type(2):before { content: "SKU"; }
+      tbody td:nth-of-type(3):before { content: "Image"; }
+      tbody td:nth-of-type(4):before { content: "Quantity"; }
+      tbody td:nth-of-type(5):before { content: "Size"; }
+      tbody td:nth-of-type(6):before { content: "Color"; }
+      tbody td:nth-of-type(7):before { content: "Closure"; }
+      tbody td:nth-of-type(8):before { content: "Unit Price"; }
+      tbody td:nth-of-type(9):before { content: "Line Total"; }
+      tbody td:nth-of-type(10):before { content: "Actions"; }
+      tbody td:nth-of-type(11):before { content: "Description"; } /* New label for mobile */
+
+      tfoot td {
+        width: 300px;
+      }
+      tfoot tr:nth-child(1) {
+        border: none;
+      }
+      tfoot tr:nth-child(1) td {
+        padding-left: 10px;
+        text-align: left;
+        border: none;
+      }
+
+      tfoot tr:nth-child(2) td {
+        text-align: left;
+      }
+
+      tfoot tr:nth-child(2) td:nth-child(3) {
+        display: none;
+      }
+    }
+
+    /* Modal specific styles */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be responsive */
+      max-width: 600px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: #6d28d9;
+      animation: spin 1s ease infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-6 lg:p-8">
+<div class="max-w-6xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-xl">
+  <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">FKME Wholesale Order Form</h1>
+  <p class="text-center text-gray-600 mb-8">Fill out the form below to create your wholesale order. Prices are calculated based on quantity tiers.</p>
+
+  <!-- Customer Information Section -->
+  <section class="mb-8 p-6 bg-purple-50 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-purple-700 mb-4">Your Information</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="customerName" class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+        <input type="text" id="customerName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 rounded-md" placeholder="Your Name">
+      </div>
+      <div>
+        <label for="customerEmail" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+        <input type="email" id="customerEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 rounded-md" placeholder="your@email.com">
+      </div>
+      <div>
+        <label for="customerPhone" class="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
+        <input type="tel" id="customerPhone" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 rounded-md" placeholder="+44 1234 567890">
+      </div>
+      <div class="md:col-span-2">
+        <label for="shippingAddress" class="block text-gray-700 text-sm font-bold mb-2">Shipping Address</label>
+        <textarea id="shippingAddress" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 rounded-md" placeholder="Street Address, City, Postcode, Country"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Order Details Section -->
+  <section class="mb-8 p-6 bg-purple-50 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-purple-700 mb-4">Order Details</h2>
+    <table class="min-w-full bg-white border border-gray-200 rounded-md shadow-sm">
+      <thead>
+      <tr class="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
+        <th class="py-3 px-6 text-left">Product</th>
+        <th class="py-3 px-6 text-left">SKU</th>
+        <th class="py-3 px-6 text-left">Image</th>
+        <th class="py-3 px-6 text-left">Quantity</th>
+        <th class="py-3 px-6 text-left">Size</th>
+        <th class="py-3 px-6 text-left">Color</th>
+        <th class="py-3 px-6 text-left">Closure</th>
+        <th class="py-3 px-6 text-right">Unit Price</th>
+        <th class="py-3 px-6 text-right">Line Total</th>
+        <th class="py-3 px-6 text-center">Actions</th>
+      </tr>
+      </thead>
+      <tbody id="orderItemsTableBody" class="text-gray-600 text-sm font-light">
+      <!-- Order items will be appended here by JavaScript -->
+      </tbody>
+      <tfoot>
+      <tr><td>    <button onclick="addOrderItem()" class="mt-4 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition-colors duration-200">
+        Add Product
+      </button></td></tr>
+      <tr class="bg-gray-100">
+        <td colspan="8" class="py-3 px-6 text-right font-bold text-gray-800">Total:</td>
+        <td id="totalOrderPrice" class="py-3 px-6 text-right font-bold text-gray-800">£0.00</td>
+        <td colspan="2"></td>
+      </tr>
+      </tfoot>
+    </table>
+
+  </section>
+
+  <!-- Payment Information Section -->
+  <section class="mb-8 p-6 bg-purple-50 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-purple-700 mb-4">Payment & Shipping</h2>
+    <p class="text-gray-700 mb-2">
+      • Full payment (plus shipping) is required prior to delivery.
+    </p>
+    <p class="text-gray-700 mb-2">
+      • Accepted payment methods: Bank Transfer, Credit Card.
+    </p>
+    <p class="text-gray-700 mb-2">
+      • Shipping: FOB from Manchester, UK. Buyer covers shipping via DPD.
+    </p>
+    <p class="text-gray-700">
+      • Standard Lead Time: 2-4 weeks (Size order dependent). Rush options available upon request.
+    </p>
+  </section>
+
+  <!-- How to Order Section -->
+  <section class="text-center p-6 bg-purple-100 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-purple-700 mb-4">How to Place Your Order</h2>
+    <p class="text-gray-700 mb-4">
+      To place your order, send an email to <a href="mailto:wholesale@fkmemerch.com" class="text-blue-600 hover:underline">wholesale@fkmemerch.com</a> with the following details:
+    </p>
+    <ul class="list-disc list-inside text-gray-700 mb-6 inline-block text-left">
+      <li>Your Full Name and Contact Information</li>
+      <li>Shipping Address</li>
+      <li>SKUs</li>
+      <li>Quantities</li>
+      <li>Sizes</li>
+      <li>Colours</li>
+      <li>Closure types (if applicable)</li>
+    </ul>
+    <p class="text-gray-700 mb-6">
+      You can use the button below to generate an email draft with your order details.
+    </p>
+    <button onclick="generateOrderEmail()" class="send-email-button">
+      Send Order Email
+    </button>
+    <div id="messageBox" class="mt-4 p-3 bg-blue-100 text-blue-800 rounded-md hidden"></div>
+  </section>
+</div>
+
+<!-- Product Description Modal -->
+<div id="descriptionModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeDescriptionModal()">&times;</span>
+    <h3 class="text-xl font-bold text-gray-800 mb-4">Generated Product Description</h3>
+    <div id="descriptionSpinner" class="spinner hidden"></div>
+    <p id="generatedDescriptionText" class="text-gray-700 whitespace-pre-wrap"></p>
+  </div>
+</div>
+
+<script>
+  // Define product data as a JavaScript object for easy access
+  const products = {
+    "FK-KP01": {
+      name: "Knee Pads",
+      description: "Durable neoprene EVA knee pads designed for comfort and protection, whether on the dancefloor or in more playful settings. Thick cushioned design helps minimise impact and prevent bruising or carpet burns. Stretchy, supportive fit. Hand wash only for longevity.",
+      prices: { "20-49": 11.00, "50-99": 10.00, "100+": 9.00 },
+      rrp: 20.00,
+      sizes: ["S/M", "M/L", "L/XL"],
+      colors: ["Black"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685053/kneepads_ndgzze.jpg"
+      }
+    },
+    "FK-BR01": {
+      name: "Briefs Loud!",
+      description: "Bold and comfortable cotton briefs featuring 360° branded waistband for maximum impact. Made from 95% cotton and 5% spandex for a soft yet supportive fit. Also available in a discreet rubber logo version for subtle style. Wash on low heat. If between sizes, we recommend sizing up.",
+      prices: { "20-49": 9.34, "50-99": 8.50, "100+": 7.65 },
+      rrp: 16.99,
+      sizes: ["S", "M", "L", "XL", "XXL"],
+      colors: ["Black", "Red", "Blue", "Orange"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/brief_-_black_w3tull.jpg",
+        "Red": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685051/brief_-_red_fyfwzl.jpg",
+        "Blue": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685050/brief_-_blue_elgfaq.jpg",
+        "Orange": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/brief_-_orange_kweo8w.jpg"
+      }
+    },
+    "FK-JS01": {
+      name: "Jockstrap Loud!",
+      description: "Statement cotton jockstrap with $360^{\circ}$ branded waistband for bold impact. Crafted from 95% cotton and 5% spandex for all-day comfort and stretch. Also available in a discreet rubber logo version for a more subtle finish. Wash on low heat. If between sizes, we recommend sizing up for best fit.",
+      prices: { "20-49": 9.34, "50-99": 8.50, "100+": 7.65 },
+      rrp: 16.99,
+      sizes: ["S", "M", "L", "XL", "XXL"],
+      colors: ["Black", "Red", "Blue", "Orange"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685053/jock_-_black_btacb0.jpg",
+        "Red": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/jock_-_red_yheumz.jpg",
+        "Blue": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/jock_-_blue_me4gjy.jpg",
+        "Orange": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685053/jock_-_yellow_uwlsqr.jpg"
+      }
+    },
+    "FK-TH01": {
+      name: "Thong",
+      description: "Striking, form-enhancing thong designed with an extra-bouncy pouch for a bold, fuller silhouette. Crafted for comfort and support, using a premium blend of 80% polyamide and 20% spandex for a perfect fit with lasting stretch. Available in Classic Camo, Blue Camo, and Red Camo.",
+      prices: { "20-49": 7.69, "50-99": 7.00, "100+": 6.30 },
+      rrp: 13.99,
+      sizes: ["S", "M", "L", "XL", "XXL"],
+      colors: ["Classic Camo", "Blue Camo", "Red Camo"],
+      closureTypes: [],
+      images: {
+        "Classic Camo": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/thong_-_camo_nt9hju.jpg",
+        "Blue Camo": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685053/thong_-_blue_bmjwng.jpg",
+        "Red Camo": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685053/thong_-_red_ih4cni.jpg"
+      }
+    },
+    "FK-SK01": {
+      name: "Logo Socks",
+      description: "Bold logo socks designed for comfort and visibility whether styled subtly or worn to stand out. Made from a soft, durable blend of 80% cotton, 15% polyester, and 5% spandex. One size fits UK men's 7-12.",
+      prices: { "20-49": 5.49, "50-99": 5.00, "100+": 4.50 },
+      rrp: 9.99,
+      sizes: ["One Size"],
+      colors: ["Black", "Red", "Blue", "White w/ Orange Band", "White w/ Black Band"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/socks_-_black_dpqvu9.jpg",
+        "Red": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/socks_-_red_b41wij.jpg",
+        "Blue": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/socks_-_blue_s6vqni.jpg",
+        "White w/ Orange Band": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/socks_-_white-orange_cdocew.jpg",
+        "White w/ Black Band": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/socks_-_white-black_vsqeue.jpg"
+      }
+    },
+    "FK-SK02": {
+      name: "Logo Knee High Socks",
+      description: "Make a bold statement with these ultra-comfortable FKMe knee high socks-perfect for the gym, sports, or standing out at the bar. Featuring a signature logo design and crafted from a breathable, stretchy blend of 80% cotton, 15% polyester, and 5% spandex. One size fits UK men's 7-12.",
+      prices: { "20-49": 8.24, "50-99": 7.50, "100+": 6.75 },
+      rrp: 14.99,
+      sizes: ["One Size"],
+      colors: ["Black"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685055/knee_socks_-_black_qhxxdq.jpg"
+      }
+    },
+    "FK-HR01": {
+      name: "Harness",
+      description: "Bold, adjustable chest harness crafted from premium PU leather and stainless steel. Designed for comfort and durability, with soft, non-toxic materials for extended wear. Fully adjustable to suit various body types-ideal for clubwear or statement styling. Hand wash only.",
+      prices: { "20-49": 16.49, "50-99": 15.00, "100+": 13.50 },
+      rrp: 29.99,
+      sizes: ["One Size"],
+      colors: ["Black"],
+      closureTypes: [],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685052/harness_oowgoo.jpg"
+      }
+    },
+    "FK-CP01": {
+      name: "Cap",
+      description: "Minimalist and stylish, this cap features a subtle rubber FKMe logo-perfect for those who prefer a discreet nod to the brand. Made from a comfortable 65% cotton, 35% polyester blend, and available with adjustable Snapback, Velcro, or Buckle closures. Machine wash on low or hand wash for best care.",
+      prices: { "20-49": 10.99, "50-99": 10.00, "100+": 9.00 },
+      rrp: 19.99,
+      sizes: ["One Size (Adjustable)"],
+      colors: ["Black"],
+      closureTypes: ["Snapback", "Velcro", "Buckle"],
+      images: {
+        "Black": "https://res.cloudinary.com/dp0mxoaki/image/upload/v1750685054/hat_deu79d.jpg"
+      }
+    }
+  };
+
+  let itemCounter = 0; // To give unique IDs to rows
+
+  /**
+   * Displays a message in the message box.
+   * @param {string} message - The message to display.
+   * @param {string} type - The type of message ('success', 'error', 'info').
+   */
+  function showMessage(message, type = 'info') {
+    const messageBox = document.getElementById('messageBox');
+    messageBox.textContent = message;
+    messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+    if (type === 'success') {
+      messageBox.classList.add('bg-green-100', 'text-green-800');
+    } else if (type === 'error') {
+      messageBox.classList.add('bg-red-100', 'text-red-800');
+    } else {
+      messageBox.classList.add('bg-blue-100', 'text-blue-800');
+    }
+    // Hide message after a few seconds
+    setTimeout(() => {
+      messageBox.classList.add('hidden');
+    }, 7000); // Increased visibility duration
+  }
+
+  /**
+   * Updates the row's image based on the selected product and color.
+   * @param {number} rowIdCounter - The counter for the row to update.
+   */
+  function updateRowImage(rowIdCounter) {
+    const productSelect = document.getElementById(`product-${rowIdCounter}`);
+    const colorSelect = document.getElementById(`color-${rowIdCounter}`);
+    const imageElement = document.getElementById(`image-${rowIdCounter}`);
+    const selectedSku = productSelect.value;
+    const selectedColor = colorSelect.value;
+
+    if (selectedSku && selectedColor && products[selectedSku] && products[selectedSku].images && products[selectedSku].images[selectedColor]) {
+      imageElement.src = products[selectedSku].images[selectedColor];
+      imageElement.alt = `${products[selectedSku].name} - ${selectedColor}`;
+    } else {
+      // Reset to a generic placeholder if no specific color image is found
+      imageElement.src = 'https://placehold.co/80x80/E2E8F0/A0AEC0?text=Select+Color';
+      imageElement.alt = 'Product Image';
+    }
+  }
+
+
+  /**
+   * Populates the size, color, and closure dropdowns for a specific row
+   * based on the selected product (SKU). Does not calculate prices.
+   * @param {number} rowIdCounter - The counter for the row being updated.
+   */
+  function populateRowDetails(rowIdCounter) {
+    const productSelect = document.getElementById(`product-${rowIdCounter}`);
+    const sizeSelect = document.getElementById(`size-${rowIdCounter}`);
+    const colorSelect = document.getElementById(`color-${rowIdCounter}`);
+    const closureSelect = document.getElementById(`closure-${rowIdCounter}`);
+    const skuCell = document.getElementById(`sku-${rowIdCounter}`);
+
+    const selectedSku = productSelect.value;
+
+    // Reset selects
+    sizeSelect.innerHTML = '<option value="">Select Size</option>';
+    colorSelect.innerHTML = '<option value="">Select Color</option>';
+    closureSelect.innerHTML = '<option value="">N/A</option>';
+    closureSelect.disabled = true; // Disable by default
+
+    if (selectedSku && products[selectedSku]) {
+      const product = products[selectedSku];
+      skuCell.textContent = selectedSku;
+
+      // Populate Sizes
+      product.sizes.forEach(size => {
+        const option = document.createElement('option');
+        option.value = size;
+        option.textContent = size;
+        sizeSelect.appendChild(option);
+      });
+
+      // Populate Colors
+      product.colors.forEach(color => {
+        const option = document.createElement('option');
+        option.value = color;
+        option.textContent = color;
+        colorSelect.appendChild(option);
+      });
+
+      // Populate Closure Types if applicable (only for FK-CP01 Cap)
+      if (product.closureTypes && product.closureTypes.length > 0) {
+        closureSelect.disabled = false;
+        closureSelect.innerHTML = '<option value="">Select Closure</option>';
+        product.closureTypes.forEach(closure => {
+          const option = document.createElement('option');
+          option.value = closure;
+          option.textContent = closure;
+          closureSelect.appendChild(option);
+        });
+      } else {
+        closureSelect.disabled = true;
+      }
+    } else {
+      // If no product selected, clear SKU and reset options to N/A or empty
+      skuCell.textContent = '';
+      sizeSelect.innerHTML = '<option value="">N/A</option>';
+      colorSelect.innerHTML = '<option value="">N/A</option>';
+      closureSelect.innerHTML = '<option value="">N/A</option>';
+    }
+    // Update the image to reflect the change (will reset to default if no color)
+    updateRowImage(rowIdCounter);
+  }
+
+  /**
+   * Calculates the correct tiered price for each SKU based on its total quantity
+   * across all order lines, and then updates the unit price and line total
+   * for all relevant rows in the table.
+   */
+  function updatePriceForEntireOrder() {
+    const skuQuantities = {}; // To store total quantity per SKU
+    const tableRows = document.querySelectorAll('#orderItemsTableBody tr');
+
+    // Pass 1: Aggregate quantities for each SKU from all rows
+    tableRows.forEach(row => {
+      const rowIdCounter = row.id.split('-')[1];
+      const productSelect = document.getElementById(`product-${rowIdCounter}`);
+      const quantityInput = document.getElementById(`quantity-${rowIdCounter}`);
+
+      const selectedSku = productSelect.value;
+      const quantity = parseInt(quantityInput.value);
+
+      if (selectedSku && products[selectedSku] && !isNaN(quantity) && quantity > 0) {
+        skuQuantities[selectedSku] = (skuQuantities[selectedSku] || 0) + quantity;
+      }
+    });
+
+    const skuTieredPrices = {}; // To store the calculated unit price per SKU based on its total quantity
+    let moqMessages = new Set(); // Use a Set to store unique MOQ messages
+
+    for (const sku in skuQuantities) {
+      const totalQuantityForSku = skuQuantities[sku];
+      const product = products[sku];
+
+      if (product) {
+        let unitPrice = 0;
+        if (totalQuantityForSku >= 100) {
+          unitPrice = product.prices["100+"];
+        } else if (totalQuantityForSku >= 50) {
+          unitPrice = product.prices["50-99"];
+        } else if (totalQuantityForSku >= 20) {
+          unitPrice = product.prices["20-49"];
+        } else {
+          // If total for SKU is less than 20 (and >0), use the 20-49 tier price.
+          // This assumes the 20-49 price is the base price before any further discounts.
+          unitPrice = product.prices["20-49"];
+          moqMessages.add(`Minimum order quantity per style is 20 units. Your current total for ${product.name} across all variations is ${totalQuantityForSku} units. The price for this style reflects the 20-49 unit tier.`);
+        }
+        skuTieredPrices[sku] = unitPrice;
+      }
+    }
+
+    // Display MOQ warnings if any
+    if (moqMessages.size > 0) {
+      showMessage(Array.from(moqMessages).join('\n'), 'info');
+    } else {
+      // Clear message box if all MOQs are met
+      document.getElementById('messageBox').classList.add('hidden');
+    }
+
+
+    // Pass 2: Apply the calculated tiered prices to each row and update cells
+    tableRows.forEach(row => {
+      const rowIdCounter = row.id.split('-')[1];
+      const productSelect = document.getElementById(`product-${rowIdCounter}`);
+      const quantityInput = document.getElementById(`quantity-${rowIdCounter}`);
+      const unitPriceCell = document.getElementById(`unitPrice-${rowIdCounter}`);
+      const lineTotalCell = document.getElementById(`lineTotal-${rowIdCounter}`);
+
+      const selectedSku = productSelect.value;
+      const quantity = parseInt(quantityInput.value);
+
+      if (selectedSku && products[selectedSku] && !isNaN(quantity)) {
+        // Get the calculated unit price for this SKU
+        const unitPrice = skuTieredPrices[selectedSku] || 0; // Fallback if SKU not in calculated prices (shouldn't happen with proper logic)
+
+        unitPriceCell.textContent = `£${unitPrice.toFixed(2)}`;
+        lineTotalCell.textContent = `£${(unitPrice * quantity).toFixed(2)}`;
+      } else {
+        // If no product selected or quantity invalid for this row, reset prices
+        unitPriceCell.textContent = '£0.00';
+        lineTotalCell.textContent = '£0.00';
+      }
+    });
+
+    updateTotalOrderPrice(); // Update the overall grand total after all line items are updated
+  }
+
+
+  /**
+   * Adds a new row to the order items table.
+   */
+  function addOrderItem() {
+    itemCounter++;
+    const tableBody = document.getElementById('orderItemsTableBody');
+    const newRow = tableBody.insertRow();
+    newRow.id = `row-${itemCounter}`;
+    newRow.className = "border-b border-gray-200 hover:bg-gray-100 align-middle";
+
+    // Product Dropdown Cell
+    const productCell = newRow.insertCell();
+    const productSelect = document.createElement('select');
+    productSelect.id = `product-${itemCounter}`;
+    productSelect.className = "py-2 px-3 rounded-md border border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 block w-full text-gray-700";
+    productSelect.innerHTML = '<option value="">Select Product</option>';
+    for (const sku in products) {
+      const option = document.createElement('option');
+      option.value = sku;
+      option.textContent = products[sku].name;
+      productSelect.appendChild(option);
+    }
+    productSelect.onchange = () => {
+      populateRowDetails(itemCounter);
+      updatePriceForEntireOrder();
+    };
+    productCell.appendChild(productSelect);
+
+    // SKU Cell
+    const skuCell = newRow.insertCell();
+    skuCell.textContent = '';
+    skuCell.id = `sku-${itemCounter}`;
+
+    // Image Cell
+    const imageCell = newRow.insertCell();
+    imageCell.className = "py-3 px-6 text-center";
+    const imageElement = document.createElement('img');
+    imageElement.id = `image-${itemCounter}`;
+    imageElement.src = 'https://placehold.co/80x80/E2E8F0/A0AEC0?text=Select+Color';
+    imageElement.alt = 'Product Image';
+    imageElement.className = 'w-20 h-20 object-cover rounded-md shadow-sm mx-auto';
+    imageElement.onerror = function() {
+      this.onerror = null;
+      this.src = 'https://placehold.co/80x80/E2E8F0/A0AEC0?text=Error';
+    };
+    imageCell.appendChild(imageElement);
+
+    // Quantity Cell
+    const quantityCell = newRow.insertCell();
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'number';
+    quantityInput.min = '0';
+    quantityInput.value = '0';
+    quantityInput.id = `quantity-${itemCounter}`;
+    quantityInput.className = "py-2 px-3 rounded-md border border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 w-24 text-right text-gray-700";
+    quantityInput.oninput = () => updatePriceForEntireOrder();
+    quantityCell.appendChild(quantityInput);
+
+    // Size Dropdown Cell
+    const sizeCell = newRow.insertCell();
+    const sizeSelect = document.createElement('select');
+    sizeSelect.id = `size-${itemCounter}`;
+    sizeSelect.className = "py-2 px-3 rounded-md border border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 block w-full text-gray-700";
+    sizeSelect.innerHTML = '<option value="">N/A</option>';
+    sizeCell.appendChild(sizeSelect);
+
+    // Color Dropdown Cell
+    const colorCell = newRow.insertCell();
+    const colorSelect = document.createElement('select');
+    colorSelect.id = `color-${itemCounter}`;
+    colorSelect.className = "py-2 px-3 rounded-md border border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 block w-full text-gray-700";
+    colorSelect.innerHTML = '<option value="">N/A</option>';
+    colorSelect.onchange = () => updateRowImage(itemCounter); // Add listener to update image
+    colorCell.appendChild(colorSelect);
+
+    // Closure Type Dropdown Cell
+    const closureCell = newRow.insertCell();
+    const closureSelect = document.createElement('select');
+    closureSelect.id = `closure-${itemCounter}`;
+    closureSelect.className = "py-2 px-3 rounded-md border border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 block w-full text-gray-700";
+    closureSelect.innerHTML = '<option value="">N/A</option>';
+    closureCell.appendChild(closureSelect);
+
+    // Unit Price Cell
+    const unitPriceCell = newRow.insertCell();
+    unitPriceCell.id = `unitPrice-${itemCounter}`;
+    unitPriceCell.className = "py-3 px-6 text-right";
+    unitPriceCell.textContent = '£0.00';
+
+    // Line Total Cell
+    const lineTotalCell = newRow.insertCell();
+    lineTotalCell.id = `lineTotal-${itemCounter}`;
+    lineTotalCell.className = "py-3 px-6 text-right";
+    lineTotalCell.textContent = '£0.00';
+
+    // Actions Cell (Delete Button)
+    const actionsCell = newRow.insertCell();
+    actionsCell.className = "py-3 px-6 text-center";
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Remove';
+    deleteButton.className = 'bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors duration-200';
+    deleteButton.onclick = () => {
+      removeOrderItem(newRow.id);
+      updatePriceForEntireOrder();
+    };
+    actionsCell.appendChild(deleteButton);
+
+    populateRowDetails(itemCounter);
+    updatePriceForEntireOrder();
+  }
+
+  /**
+   * Removes a row from the order items table.
+   * @param {string} rowId - The ID of the row to remove.
+   */
+  function removeOrderItem(rowId) {
+    document.getElementById(rowId).remove();
+    updatePriceForEntireOrder();
+  }
+
+  /**
+   * Calculates and updates the total price of the entire order.
+   */
+  function updateTotalOrderPrice() {
+    let total = 0;
+    const tableBody = document.getElementById('orderItemsTableBody');
+    for (let i = 0; i < tableBody.rows.length; i++) {
+      const row = tableBody.rows[i];
+      const lineTotalText = row.querySelector(`[id^="lineTotal-"]`).textContent;
+      total += parseFloat(lineTotalText.replace('£', ''));
+    }
+    document.getElementById('totalOrderPrice').textContent = `£${total.toFixed(2)}`;
+  }
+
+  /**
+   * Generates an email draft with the order details, performing final validation.
+   */
+  function generateOrderEmail() {
+    const customerName = document.getElementById('customerName').value;
+    const customerEmail = document.getElementById('customerEmail').value;
+    const customerPhone = document.getElementById('customerPhone').value;
+    const shippingAddress = document.getElementById('shippingAddress').value;
+
+    if (!customerName || !customerEmail || !shippingAddress) {
+      showMessage("Please fill in your Full Name, Email, and Shipping Address before generating the order email.", 'error');
+      return;
+    }
+
+    let orderDetails = `Wholesale Order Request for ${customerName}\n\n`;
+    orderDetails += `Contact Email: ${customerEmail}\n`;
+    orderDetails += `Contact Phone: ${customerPhone || 'N/A'}\n`;
+    orderDetails += `Shipping Address:\n${shippingAddress}\n\n`;
+    orderDetails += "--- Order Details ---\n";
+
+    const tableRows = document.querySelectorAll('#orderItemsTableBody tr');
+    if (tableRows.length === 0) {
+      showMessage("Please add at least one product to your order.", 'error');
+      return;
+    }
+
+    const orderedSkusForValidation = {};
+    let hasValidItemsInRows = false;
+    let validationFailed = false;
+
+    tableRows.forEach(row => {
+      if (validationFailed) return;
+
+      const rowIdCounter = row.id.split('-')[1];
+      const productSelect = document.getElementById(`product-${rowIdCounter}`);
+      const quantityInput = document.getElementById(`quantity-${rowIdCounter}`);
+      const sizeSelect = document.getElementById(`size-${rowIdCounter}`);
+      const colorSelect = document.getElementById(`color-${rowIdCounter}`);
+      const closureSelect = document.getElementById(`closure-${rowIdCounter}`);
+      const lineTotalText = document.getElementById(`lineTotal-${rowIdCounter}`).textContent;
+      const unitPriceText = document.getElementById(`unitPrice-${rowIdCounter}`).textContent;
+
+      const selectedSku = productSelect.value;
+      const quantity = parseInt(quantityInput.value);
+      const size = sizeSelect.value;
+      const color = colorSelect.value;
+      const closure = closureSelect.value;
+
+      if (!selectedSku || isNaN(quantity) || quantity <= 0) {
+        return;
+      }
+
+      if (!size || !color || (products[selectedSku].closureTypes.length > 0 && !closure)) {
+        showMessage(`Please ensure all options (Size, Color, Closure) are selected for "${products[selectedSku].name}".`, 'error');
+        validationFailed = true;
+        return;
+      }
+
+      hasValidItemsInRows = true;
+      orderedSkusForValidation[selectedSku] = (orderedSkusForValidation[selectedSku] || 0) + quantity;
+
+      orderDetails += `Product: ${products[selectedSku].name}\n`;
+      orderDetails += `  SKU: ${selectedSku}\n`;
+      orderDetails += `  Quantity: ${quantity}\n`;
+      orderDetails += `  Size: ${size}\n`;
+      orderDetails += `  Color: ${color}\n`;
+      if (products[selectedSku].closureTypes.length > 0) {
+        orderDetails += `  Closure Type: ${closure || 'N/A'}\n`;
+      }
+      orderDetails += `  Unit Price (Tier): ${unitPriceText}\n`;
+      orderDetails += `  Line Total: ${lineTotalText}\n`;
+      orderDetails += "--------------------\n";
+    });
+
+    if(validationFailed) return;
+
+    if (!hasValidItemsInRows) {
+      showMessage("No valid items have been added. Ensure product, quantity, size, and color are selected.", 'error');
+      return;
+    }
+
+    for (const sku in orderedSkusForValidation) {
+      if (orderedSkusForValidation[sku] < 20) {
+        showMessage(`Minimum order for "${products[sku].name}" is 20 units. You have ${orderedSkusForValidation[sku]}.`, 'error');
+        return;
+      }
+    }
+
+
+    const totalOrderPrice = document.getElementById('totalOrderPrice').textContent;
+    orderDetails += `Total Estimated Order Value (Excl. Shipping): ${totalOrderPrice}\n\n`;
+    orderDetails += "Please note: Shipping costs will be added. Full payment is required prior to delivery.\n";
+    orderDetails += "Accepted payment methods: Bank Transfer, Credit Card.\n";
+    orderDetails += "Standard Lead Time: 2-4 weeks (Size order dependent). Rush options available upon request.\n\n";
+    orderDetails += "Thank you!";
+
+    const subject = encodeURIComponent("FKME Wholesale Order Request");
+    const body = encodeURIComponent(orderDetails);
+
+    window.location.href = `mailto:wholesale@fkmemerch.com?subject=${subject}&body=${body}`;
+    showMessage("Email draft generated! Please review and send it from your email client.", 'success');
+  }
+
+  /**
+   * Opens the modal to display the generated description.
+   * @param {string} descriptionText - The text to display in the modal.
+   */
+  function openDescriptionModal(descriptionText) {
+    const modal = document.getElementById('descriptionModal');
+    const generatedDescriptionText = document.getElementById('generatedDescriptionText');
+    generatedDescriptionText.textContent = descriptionText;
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * Closes the description modal.
+   */
+  function closeDescriptionModal() {
+    const modal = document.getElementById('descriptionModal');
+    modal.style.display = 'none';
+    document.getElementById('generatedDescriptionText').textContent = '';
+    document.getElementById('descriptionSpinner').classList.add('hidden');
+  }
+
+  /**
+   * Generates a sales-oriented product description using the Gemini API.
+   * @param {number} rowIdCounter - The ID of the row for which to generate the description.
+   */
+  async function generateProductDescription(rowIdCounter) {
+    const productSelect = document.getElementById(`product-${rowIdCounter}`);
+    const selectedSku = productSelect.value;
+    const spinner = document.getElementById('descriptionSpinner');
+    const generatedDescriptionText = document.getElementById('generatedDescriptionText');
+
+    if (!selectedSku || !products[selectedSku]) {
+      showMessage("Please select a product first to generate a description.", 'error');
+      return;
+    }
+
+    const product = products[selectedSku];
+    const productName = product.name;
+    const productDescription = product.description;
+
+    spinner.classList.remove('hidden');
+    generatedDescriptionText.textContent = 'Generating description...';
+    openDescriptionModal(generatedDescriptionText.textContent);
+
+    const prompt = `Generate a sales-oriented product description (2-3 paragraphs) for a retail customer. The product is "${productName}". Its core description is: "${productDescription}". Highlight its unique selling points and appeal to a modern, fashion-conscious demographic.`;
+
+    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+    const apiKey = "";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
+        generatedDescriptionText.textContent = result.candidates[0].content.parts[0].text;
+      } else {
+        generatedDescriptionText.textContent = 'Failed to generate description. Please try again.';
+        console.error('Gemini API response structure unexpected:', result);
+      }
+    } catch (error) {
+      generatedDescriptionText.textContent = 'Error connecting to the generation service. Please check your network and try again.';
+      console.error('Error calling Gemini API:', error);
+    } finally {
+      spinner.classList.add('hidden');
+    }
+  }
+
+
+  // Add an initial empty row when the page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    addOrderItem();
+  });
+</script>
+</body>
+</html>
