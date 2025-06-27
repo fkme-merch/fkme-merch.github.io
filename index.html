@@ -846,7 +846,8 @@
       const quantityInput = document.getElementById(`quantity-${rowIdCounter}`);
       const sizeSelect = document.getElementById(`size-${rowIdCounter}`);
       const colorSelect = document.getElementById(`color-${rowIdCounter}`);
-      const closureSelect = document.getElementById(`closure-${rowIdCounter}`);
+      const skuCell = document.getElementById(`sku-${rowIdCounter}`);
+      const displayedSku = skuCell.textContent.trim();
       const lineTotalText = document.getElementById(`lineTotal-${rowIdCounter}`).textContent;
       const unitPriceText = document.getElementById(`unitPrice-${rowIdCounter}`).textContent;
 
@@ -854,35 +855,31 @@
       const quantity = parseInt(quantityInput.value);
       const size = sizeSelect.value;
       const color = colorSelect.value;
-      const closure = closureSelect.value;
 
       if (!selectedSku || isNaN(quantity) || quantity <= 0) {
         return;
       }
 
-      if (!size || !color || (products[selectedSku].closureTypes.length > 0 && !closure)) {
-        showMessage(`Please ensure all options (Size, Color, Closure) are selected for "${products[selectedSku].name}".`, 'error');
+      if (!size || !color || !displayedSku) {
+        showMessage(`Please ensure all options (Size, Color) are selected so SKU can be generated for "${products[selectedSku].name}".`, 'error');
         validationFailed = true;
         return;
       }
 
       hasValidItemsInRows = true;
-      orderedSkusForValidation[selectedSku] = (orderedSkusForValidation[selectedSku] || 0) + quantity;
+      orderedSkusForValidation[displayedSku] = (orderedSkusForValidation[displayedSku] || 0) + quantity;
 
       orderDetails += `Product: ${products[selectedSku].name}\n`;
-      orderDetails += `  SKU: ${selectedSku}\n`;
+      orderDetails += `  SKU: ${displayedSku}\n`;
       orderDetails += `  Quantity: ${quantity}\n`;
       orderDetails += `  Size: ${size}\n`;
       orderDetails += `  Color: ${color}\n`;
-      if (products[selectedSku].closureTypes.length > 0) {
-        orderDetails += `  Closure Type: ${closure || 'N/A'}\n`;
-      }
       orderDetails += `  Unit Price (Tier): ${unitPriceText}\n`;
       orderDetails += `  Line Total: ${lineTotalText}\n`;
       orderDetails += "--------------------\n";
     });
 
-    if(validationFailed) return;
+    if (validationFailed) return;
 
     if (!hasValidItemsInRows) {
       showMessage("No valid items have been added. Ensure product, quantity, size, and color are selected.", 'error');
@@ -891,11 +888,10 @@
 
     for (const sku in orderedSkusForValidation) {
       if (orderedSkusForValidation[sku] < 20) {
-        showMessage(`Minimum order for "${products[sku].name}" is 20 units. You have ${orderedSkusForValidation[sku]}.`, 'error');
+        showMessage(`Minimum order for SKU "${sku}" is 20 units. You have ${orderedSkusForValidation[sku]}.`, 'error');
         return;
       }
     }
-
 
     const totalOrderPrice = document.getElementById('totalOrderPrice').textContent;
     orderDetails += `Total Estimated Order Value (Excl. Shipping): ${totalOrderPrice}\n\n`;
