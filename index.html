@@ -485,6 +485,19 @@
     }
     // Update the image to reflect the change (will reset to default if no color)
     updateRowImage(rowIdCounter);
+
+    // Update the image to reflect the change (will reset to default if no color)
+    updateRowImage(rowIdCounter);
+
+// Add event listeners to size and colour dropdowns
+    sizeSelect.onchange = () => updateSkuField(rowIdCounter);
+    colorSelect.onchange = () => {
+      updateRowImage(rowIdCounter);
+      updateSkuField(rowIdCounter);
+    };
+
+// Also update SKU right away in case default selections exist
+    updateSkuField(rowIdCounter);
   }
 
   /**
@@ -570,6 +583,94 @@
 
     updateTotalOrderPrice(); // Update the overall grand total after all line items are updated
   }
+
+  const skuMappings = {
+    "Knee Pads": {
+      "Black": {
+        "S/M": "FK-KP01",
+        "M/L": "FK-KP02",
+        "L/XL": "FK-KP03"
+      }
+    },
+    "Briefs Loud!": {
+      "Black": {
+        "S":"FK-BR-B01","M":"FK-BR-B02","L":"FK-BR-B03","XL":"FK-BR-B04","XXL":"FK-BR-B05"
+      },
+      "Blue": {
+        "S":"FK-BR-BL01","M":"FK-BR-BL02","L":"FK-BR-BL03","XL":"FK-BR-BL04","XXL":"FK-BR-BL05"
+      },
+      "Red": {
+        "S":"FK-BR-R01","M":"FK-BR-RO2","L":"FK-BR-R03","XL":"FK-BR-R04","XXL":"FK-BR-R05"
+      },
+      "Orange": {
+        "S":"FK-BR-OR01","M":"FK-BR-OR02","L":"FK-BR-OR03","XL":"FK-BR-OR04","XXL":"FK-BR-OR05"
+      }
+    },
+    "Jockstrap Loud!": {
+      "Black": {
+        "S":"FK-JS-B01","M":"FK-JS-B02","L":"FK-JS-B03","XL":"FK-JS-B04","XXL":"FK-JS-B05"
+      },
+      "Blue": {
+        "S":"FK-JS-BL01","M":"FK-JS-BL02","L":"FK-JS-BL03","XL":"FK-JS-BL04","XXL":"FK-JS-BL05"
+      },
+      "Red": {
+        "S":"FK-JS-R01","M":"FK-JS-R02","L":"FK-JS-R03","XL":"FK-JS-R04","XXL":"FK-JS-R05"
+      },
+      "Orange": {
+        "S":"FK-JS-OR01","M":"FK-JS-OR02","L":"FK-JS-OR03","XL":"FK-JS-OR04","XXL":"FK-JS-OR05"
+      }
+    },
+    "Thong": {
+      "Red Camo": {
+        "S":"FK-TH-R01","M":"FK-TH-R02","L":"FK-TH-R03","XL":"FK-TH-R04","XXL":"FK-TH-R05"
+      },
+      "Blue Camo": {
+        "S":"FK-TH-BL01","M":"FK-TH-BL02","L":"FK-TH-BL03","XL":"FK-TH-BL04","XXL":"FK-TH-BL05"
+      },
+      "Classic Camo": {
+        "S":"FK-TH-C01","M":"FK-TH-C02","L":"FK-TH-C03","XL":"FK-TH-C04","XXL":"FK-TH-C05"
+      }
+    },
+    "Logo Socks": {
+      "Black": { "One Size": "FK-SK-B" },
+      "Blue": { "One Size": "FK-SK-BL" },
+      "Red": { "One Size": "FK-SK-R" },
+      "White w/ Orange Band": { "One Size": "FK-SK-WL01" },
+      "White w/ Black Band": { "One Size": "FK-SK-WL02" }
+    },
+    "Logo Knee High Socks": {
+      "Black": { "One Size": "FK-SK-K01" }
+    },
+    "Harness": {
+      "Black": { "One Size": "FK-HR-01" }
+    },
+    "Cap": {
+      "Black": { "One Size (Adjustable)": "FK-CP-01" }
+    }
+  };
+
+  function updateSkuField(rowIdCounter) {
+    const productSelect = document.getElementById(`product-${rowIdCounter}`);
+    const sizeSelect = document.getElementById(`size-${rowIdCounter}`);
+    const colorSelect = document.getElementById(`color-${rowIdCounter}`);
+    const skuCell = document.getElementById(`sku-${rowIdCounter}`);
+
+    const selectedSku = productSelect.value;
+    if (!selectedSku || !products[selectedSku]) {
+      skuCell.textContent = "";
+      return;
+    }
+    const productName = products[selectedSku].name;
+    const size = sizeSelect.value || "One Size";
+    const colour = colorSelect.value;
+
+    if (skuMappings[productName]?.[colour]?.[size]) {
+      skuCell.textContent = skuMappings[productName][colour][size];
+    } else {
+      skuCell.textContent = "";
+    }
+  }
+
 
 
   /**
